@@ -7,7 +7,8 @@ supervisor, health checks, and a local pairing helper. Linux/amd64 only.
 
 Ollama, models, GPU drivers, and a desktop UI are separate. Manage the cluster
 from an existing PAIR desktop client. This project does not contain the WSL
-manual-peer compatibility patch. No image registry or Git remote is configured.
+manual-peer compatibility patch. Images are published as
+`greggee/nvpair-container` on Docker Hub.
 
 ## Build and run with existing Ollama
 
@@ -25,16 +26,23 @@ Do not expose these listeners to the Internet.
 ```bash
 cp .env.example .env
 # Edit PAIR_NODE_NAME and PAIR_STATE_DIR for this host.
-mkdir -p state
-sudo chown 10002:10002 state
-sudo chmod 0700 state
 docker compose build
 docker compose up -d
 docker compose ps
-docker exec nvpair python3 /app/admin.py status
+docker exec --user=10002:10002 nvpair python3 /app/admin.py status
 ```
 
-If you selected a different state path, create and secure that directory instead.
+Docker creates a missing state directory automatically. The entrypoint starts as
+root, sets only the state directory itself to owner `10002:10002` and mode `0700`,
+then permanently switches to that UID/GID before starting PAIR. It clears
+supplementary groups and uses a private umask. Existing identity files are not
+rewritten or recursively re-owned. Bind-mount a dedicated local appdata directory;
+filesystems that reject ownership changes need a pre-provisioned directory.
+Compose and the Unraid template grant only the five capabilities needed for this
+initialization, with read-only rootfs and no-new-privileges retained. Do not set
+`--user=10002:10002` for automatic initialization. For a manually prepared state
+directory, running directly as that UID/GID with all capabilities dropped remains
+supported.
 Settings are initialized with `force_ports: false` only for a fresh profile;
 existing settings and pairing are preserved. Port environment variables only
 validate expected ports; they do not reconfigure the upstream services.
@@ -43,8 +51,8 @@ In Windows PAIR, choose **Add node** and select this node (or enter its LAN IP).
 Then accept the invitation inside the running container:
 
 ```bash
-docker exec nvpair python3 /app/admin.py pending
-docker exec -it nvpair python3 /app/admin.py accept
+docker exec --user=10002:10002 nvpair python3 /app/admin.py pending
+docker exec --user=10002:10002 -it nvpair python3 /app/admin.py accept
 ```
 
 Enter the displayed six-digit PIN at the hidden prompt. The helper also supports
@@ -97,7 +105,7 @@ checks and permits whichever proxy port upstream selects:
 
 ```bash
 docker compose -f compose.yml -f examples/router-only.yml up -d
-docker exec nvpair python3 /app/admin.py status
+docker exec --user=10002:10002 nvpair python3 /app/admin.py status
 ```
 
 Inspect the actual proxy port, adjust LAN restrictions accordingly, pair, and
@@ -114,8 +122,10 @@ docker compose -f compose.yml -f examples/router-only.yml config --quiet
 ```
 
 Builds use a digest-pinned Python base and verify the official archive SHA-256
-before extraction. To upgrade, review upstream, update both `PAIR_VERSION` and
-`PAIR_SHA256` in the Dockerfile, update image tags/examples/template and notices,
+before extraction. The image remains tagged `1.0.0`; the upstream version and
+checksum are unchanged by wrapper-only updates. To upgrade, review upstream,
+update both `PAIR_VERSION` and `PAIR_SHA256` in the Dockerfile, update image
+tags/examples/template and notices,
 then build and validate using isolated state. Do not replace individual workers.
 
 The original adopted-Ollama wrapper was validated on an Ubuntu AMD host. This

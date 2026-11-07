@@ -1,6 +1,6 @@
 services:
   nvpair:
-    image: nvpair-container:1.0.0
+    image: greggee/nvpair-container:1.0.0
     build:
       context: .
     platform: linux/amd64
@@ -8,9 +8,9 @@ services:
     hostname: ${PAIR_NODE_NAME:-PAIR-SERVER}
     network_mode: host
     restart: unless-stopped
-    user: "10002:10002"
     read_only: true
     cap_drop: [ALL]
+    cap_add: [CHOWN, FOWNER, DAC_OVERRIDE, SETUID, SETGID]
     security_opt: [no-new-privileges:true]
     tmpfs: [/tmp]
     environment:

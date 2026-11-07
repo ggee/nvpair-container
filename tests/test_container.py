@@ -140,7 +140,9 @@ class AdministrationTests(unittest.TestCase):
         root = ET.parse(ROOT / "unraid/nvpair.xml").getroot()
         self.assertEqual(root.findtext("Network"), "host")
         self.assertEqual(root.findtext("Privileged"), "false")
-        self.assertIn("--user=10002:10002", root.findtext("ExtraParams"))
+        self.assertNotIn("--user=", root.findtext("ExtraParams"))
+        for capability in ("CHOWN", "FOWNER", "DAC_OVERRIDE", "SETUID", "SETGID"):
+            self.assertIn(f"--cap-add={capability}", root.findtext("ExtraParams"))
         self.assertIn("--read-only", root.findtext("ExtraParams"))
         configs = {c.attrib["Target"]: c.text for c in root.findall("Config")}
         self.assertEqual(configs["NVIDIA_DRIVER_CAPABILITIES"], "utility")

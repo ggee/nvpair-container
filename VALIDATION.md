@@ -25,3 +25,24 @@ Pending:
 Docker is unavailable in the current WSL distro. The original Ubuntu deployment
 is evidence for the starting wrapper, not runtime validation of this derivative.
 No production services were changed and no model requests were submitted.
+
+## Automatic state initialization — 2026-11-06
+
+- All 14 Python tests passed, including private-directory creation, existing
+  identity preservation, and rejection of symlink/file state paths.
+- Base, NVIDIA, and routing-only Compose configurations validated; Unraid XML
+  parsed successfully.
+- Built the updated Linux/amd64 image using Docker Desktop from WSL. Upstream
+  PAIR remains at the same pinned version and SHA-256; the image tag stays `1.0.0`.
+- Actual network-isolated Docker containers with disposable volume state verified
+  initialization of a root-owned directory, repeated startup with existing private
+  state, writable PAIR profile initialization, and direct non-root startup with
+  pre-provisioned state. The process ran as UID/GID 10002, with no unrelated groups,
+  zero effective/permitted capabilities, and no ability to regain UID 0. Directory
+  mode was 0700 and a new private test identity was 0600 and survived restart.
+- Missing initialization capabilities caused startup to fail before executing
+  the application command. All disposable test volumes were removed.
+
+These entrypoint checks executed Python probes, not PAIR workers. Full PAIR
+startup, pairing, inference, GPU telemetry, and Unraid host validation remain
+pending. No image was pushed and no host deployment was performed.

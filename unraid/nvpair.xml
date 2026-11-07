@@ -11,8 +11,8 @@
   <Overview>Unofficial headless NVIDIA PAIR wrapper for Linux/amd64. Uses the greggee/nvpair-container image from Docker Hub and requires a separate Ollama backend on host loopback port 11434. Restrict host-network listeners to the trusted LAN before starting. Optional NVIDIA utility telemetry requires the host NVIDIA runtime.</Overview>
   <Category>Tools:</Category>
   <WebUI/>
-  <ExtraParams>--hostname=PAIR-UNRAID --user=10002:10002 --read-only --cap-drop=ALL --security-opt=no-new-privileges:true --tmpfs=/tmp --stop-timeout=60 --restart=unless-stopped</ExtraParams>
-  <Config Name="PAIR state" Target="/state" Default="/mnt/user/appdata/nvpair" Mode="rw" Description="Fresh private state, owned by UID/GID 10002; contains identity keys. Never share across nodes." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/nvpair</Config>
+  <ExtraParams>--hostname=PAIR-UNRAID --read-only --cap-drop=ALL --cap-add=CHOWN --cap-add=FOWNER --cap-add=DAC_OVERRIDE --cap-add=SETUID --cap-add=SETGID --security-opt=no-new-privileges:true --tmpfs=/tmp --stop-timeout=60 --restart=unless-stopped</ExtraParams>
+  <Config Name="PAIR state" Target="/state" Default="/mnt/user/appdata/nvpair" Mode="rw" Description="Private state, automatically secured as UID/GID 10002 with mode 0700 at startup; contains identity keys. Never share across nodes." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/nvpair</Config>
   <Config Name="Require local Ollama" Target="PAIR_REQUIRE_OLLAMA" Default="true" Description="Health check requires an adopted local Ollama." Type="Variable" Display="advanced" Required="true" Mask="false">true</Config>
   <Config Name="Ollama backend port" Target="PAIR_OLLAMA_PORT" Default="11434" Description="Expected adopted backend port; does not relocate Ollama." Type="Variable" Display="advanced" Required="true" Mask="false">11434</Config>
   <Config Name="PAIR proxy port" Target="PAIR_EXPECT_PROXY_PORT" Default="11435" Description="Expected proxy port; does not configure its listener." Type="Variable" Display="advanced" Required="true" Mask="false">11435</Config>
