@@ -8,7 +8,34 @@
   <Shell>sh</Shell>
   <Project>https://github.com/ggee/nvpair-container</Project>
   <TemplateURL>https://raw.githubusercontent.com/ggee/nvpair-container/main/unraid/nvpair.xml</TemplateURL>
-  <Overview>Unofficial headless NVIDIA PAIR wrapper for Linux/amd64. Uses the greggee/nvpair-container image from Docker Hub and requires a separate Ollama backend on host loopback port 11434. The name shown in PAIR defaults to PAIR-UNRAID. To change it, enable Advanced View and edit --hostname=PAIR-UNRAID in Extra Parameters, then Apply. Use a unique hostname with letters, numbers, and hyphens. The Unraid container Name field does not set the PAIR display name. Keep the same state path to preserve pairing. Restrict host-network listeners to the trusted LAN before starting. Optional NVIDIA utility telemetry requires the host NVIDIA runtime.</Overview>
+  <Overview>Unofficial headless container for NVIDIA Personal AI Router (PAIR), Linux/amd64.
+Connect this node to your PAIR cluster and route inference between paired computers. Manage it from an existing PAIR desktop client. Install Ollama and models separately.
+
+REQUIREMENTS:
+Use Host networking with a healthy Ollama backend reachable at 127.0.0.1:11434 on this Unraid server. An Ollama container can publish its port to host loopback. The PAIR proxy normally listens on 11435. Port variables check expected ports; they do not reconfigure the upstream listeners. Avoid another PAIR instance on the same host.
+
+NODE NAME:
+The name shown in PAIR defaults to PAIR-UNRAID. In Advanced View, change --hostname=PAIR-UNRAID in Extra Parameters (for example, --hostname=Tower-AI), then Apply. Use a unique hostname with letters, numbers, and hyphens. Changing the Unraid container Name alone does not rename the PAIR node.
+
+NVIDIA GPU TELEMETRY (optional):
+Requires a working Unraid NVIDIA driver and container GPU support.
+For all NVIDIA GPUs, append --gpus=all to Extra Parameters, set NVIDIA GPU selection to all, and leave NVIDIA capabilities as utility.
+For one NVIDIA GPU, append --runtime=nvidia instead, set NVIDIA GPU selection to its GPU-... UUID, and keep utility. Obtain UUIDs with: nvidia-smi --query-gpu=name,uuid --format=csv,noheader
+Keep the existing Extra Parameters flags. Leave GPU selection as void if monitoring is not needed. Apply recreates the container so PAIR can detect GPU access at startup.
+These settings enable monitoring; configure Ollama GPU inference separately. AMD GPU utilization telemetry is not supported by this wrapper.
+
+STATE AND PAIRING:
+The appdata directory is automatically secured at startup, then PAIR runs as UID/GID 10002:10002. Keep the same state path when renaming or updating; it contains private identity keys and preserves pairing. Never share state between nodes or publish it.
+Send an invitation from your PAIR desktop client, then accept in the Unraid terminal:
+docker exec --user=10002:10002 -it nvpair python3 /app/admin.py accept
+Enter the PIN shown by the inviting client. Check status with:
+docker exec --user=10002:10002 nvpair python3 /app/admin.py status
+
+NETWORK ACCESS:
+Restrict TCP 11435, 14318-14323 and UDP 5353 to loopback and your trusted LAN, for both IPv4 and IPv6. Do not expose these services to the Internet. No WebUI is included.
+
+Docs: https://github.com/ggee/nvpair-container
+Upstream: https://github.com/NVIDIA/Personal-AI-Router</Overview>
   <Category>Tools:</Category>
   <WebUI/>
   <ExtraParams>--hostname=PAIR-UNRAID --read-only --cap-drop=ALL --cap-add=CHOWN --cap-add=FOWNER --cap-add=DAC_OVERRIDE --cap-add=SETUID --cap-add=SETGID --security-opt=no-new-privileges:true --tmpfs=/tmp --stop-timeout=60 --restart=unless-stopped</ExtraParams>
@@ -16,6 +43,6 @@
   <Config Name="Require local Ollama" Target="PAIR_REQUIRE_OLLAMA" Default="true" Description="Health check requires an adopted local Ollama." Type="Variable" Display="advanced" Required="true" Mask="false">true</Config>
   <Config Name="Ollama backend port" Target="PAIR_OLLAMA_PORT" Default="11434" Description="Expected adopted backend port; does not relocate Ollama." Type="Variable" Display="advanced" Required="true" Mask="false">11434</Config>
   <Config Name="PAIR proxy port" Target="PAIR_EXPECT_PROXY_PORT" Default="11435" Description="Expected proxy port; does not configure its listener." Type="Variable" Display="advanced" Required="true" Mask="false">11435</Config>
-  <Config Name="NVIDIA GPU UUID" Target="NVIDIA_VISIBLE_DEVICES" Default="void" Description="Optional: replace void with GPU UUID and add --runtime=nvidia to Extra Parameters." Type="Variable" Display="advanced" Required="false" Mask="false">void</Config>
+  <Config Name="NVIDIA GPU selection" Target="NVIDIA_VISIBLE_DEVICES" Default="void" Description="Optional telemetry: set all with --gpus=all, or a GPU UUID with --runtime=nvidia in Extra Parameters. Leave void to disable GPU exposure." Type="Variable" Display="advanced" Required="false" Mask="false">void</Config>
   <Config Name="NVIDIA capabilities" Target="NVIDIA_DRIVER_CAPABILITIES" Default="utility" Description="Management telemetry only; Ollama separately needs compute access." Type="Variable" Display="advanced" Required="false" Mask="false">utility</Config>
 </Container>

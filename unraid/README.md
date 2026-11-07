@@ -30,10 +30,15 @@ renaming does not require deleting state or creating a new pairing identity.
 5. Verify host port availability and enforce the trusted-LAN IPv4/IPv6 boundary
    described in the main README before starting. The Ubuntu systemd/firewall
    units are not part of this image. Enable Unraid autostart after validation.
-6. For NVIDIA telemetry, install the Nvidia-Driver plugin with a GTX 1080
-   compatible driver. In advanced template settings add `--runtime=nvidia` to
-   **Extra Parameters**, set `NVIDIA_VISIBLE_DEVICES` to the card's UUID, and
-   leave `NVIDIA_DRIVER_CAPABILITIES=utility`. Preserve the existing extra flags.
+6. For NVIDIA telemetry, install the Nvidia-Driver plugin with a driver compatible
+   with your GPU. In Advanced View, append `--gpus=all` to **Extra Parameters**,
+   set **NVIDIA GPU selection** (`NVIDIA_VISIBLE_DEVICES`) to `all`, and leave
+   **NVIDIA capabilities** (`NVIDIA_DRIVER_CAPABILITIES`) as `utility`. To select
+   one GPU instead, use `--runtime=nvidia` with its `GPU-...` UUID, obtained using
+   `nvidia-smi --query-gpu=name,uuid --format=csv,noheader`. Preserve the existing
+   extra flags. Leave selection at `void` to disable GPU exposure. Apply recreates
+   the container so PAIR can detect the GPU at startup. Configure Ollama's compute
+   access separately; AMD GPU utilization telemetry is not supported here.
 7. Start, check health, accept the invitation as described in the main README,
    and verify a streamed inference request originating from another node.
 
