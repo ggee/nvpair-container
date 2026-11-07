@@ -3,6 +3,16 @@
 The template uses `greggee/nvpair-container:1.0.0` from Docker Hub. Start with
 a fresh node identity and a unique hostname such as `PAIR-UNRAID`.
 
+The template uses NVIDIA's official 256 x 256 PAIR application icon from the
+pinned `v1.0.0` release. This remains an unofficial container wrapper. The original
+generated [alternative icon](../assets/nvpair-icon.png) and its
+[generation prompt](../assets/nvpair-icon-prompt.txt) are preserved. To use the
+alternative, set **Icon URL** in Advanced View to:
+
+```text
+https://raw.githubusercontent.com/ggee/nvpair-container/main/assets/nvpair-icon.png
+```
+
 The name shown in PAIR comes from the container hostname. In **Advanced View**,
 change only `--hostname=PAIR-UNRAID` in **Extra Parameters**, for example to
 `--hostname=Tower-AI`, and click **Apply** to recreate the container. Use a unique

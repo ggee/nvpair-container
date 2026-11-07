@@ -3,6 +3,7 @@
   <Name>nvpair</Name>
   <Repository>greggee/nvpair-container:1.0.0</Repository>
   <Registry>https://hub.docker.com/r/greggee/nvpair-container</Registry>
+  <Icon>https://raw.githubusercontent.com/NVIDIA/Personal-AI-Router/v1.0.0/desktop/resources/app-icon/pair-256.png</Icon>
   <Network>host</Network>
   <Privileged>false</Privileged>
   <Shell>sh</Shell>

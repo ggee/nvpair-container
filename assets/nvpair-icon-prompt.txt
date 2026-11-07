@@ -1,0 +1,7 @@
+Generated with the built-in image_gen tool. Resized to 256 x 256 with gdk-pixbuf-thumbnailer.
+
+Use case: logo-brand
+Asset type: square PNG application icon for the unofficial nvpair-container Unraid Docker template, final display 256 x 256 pixels and frequently reduced to 48 pixels.
+Primary request: create one polished, distinctive icon evoking local AI routing and paired network nodes. A dark charcoal rounded-square badge with a bold luminous lime-green geometric network emblem in the upper two thirds: two interlocking rounded routing paths connecting three substantial circular nodes, visually balanced and immediately recognizable. In the lower third, the exact text "PAIR" in large, heavy, crisp off-white geometric sans-serif capitals. Small restrained teal accent on one connection; clean flat shapes with subtle dimensional shading, precise edges, strong contrast. NVIDIA-inspired green is appropriate, but invent an original emblem rather than the NVIDIA eye logo.
+Composition: centered, generous safe inset, no thin lines or tiny circuitry, clean readable silhouette at 48px. One icon only. Transparent canvas outside the rounded-square badge. No presentation scene, mockup, watermark, extra letters, captions, or extra icons. Export square PNG, ideally 256 x 256 pixels.
+
