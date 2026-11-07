@@ -3,6 +3,13 @@
 The template uses `greggee/nvpair-container:1.0.0` from Docker Hub. Start with
 a fresh node identity and a unique hostname such as `PAIR-UNRAID`.
 
+The name shown in PAIR comes from the container hostname. In **Advanced View**,
+change only `--hostname=PAIR-UNRAID` in **Extra Parameters**, for example to
+`--hostname=Tower-AI`, and click **Apply** to recreate the container. Use a unique
+hostname with letters, numbers, and hyphens. Unraid's container **Name** field is
+separate and does not change the PAIR display name. Keep the same state mapping;
+renaming does not require deleting state or creating a new pairing identity.
+
 1. Install/configure Ollama separately. Expose its API on host loopback
    `127.0.0.1:11434`. Configure its NVIDIA compute access separately if needed.
 2. Install the XML as a local user template, for example

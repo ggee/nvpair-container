@@ -32,6 +32,13 @@ docker compose ps
 docker exec --user=10002:10002 nvpair python3 /app/admin.py status
 ```
 
+The node name shown in PAIR comes from the container hostname. For Compose, set
+`PAIR_NODE_NAME=Tower-AI` in `.env`, then run `docker compose up -d` to recreate
+the container with that hostname. Use a unique hostname with letters, numbers,
+and hyphens. Keep the same state path to preserve identity and pairing. For
+Unraid, edit `--hostname=PAIR-UNRAID` in **Advanced View → Extra Parameters** and
+click **Apply**; changing the container's **Name** alone does not rename the node.
+
 Docker creates a missing state directory automatically. The entrypoint starts as
 root, sets only the state directory itself to owner `10002:10002` and mode `0700`,
 then permanently switches to that UID/GID before starting PAIR. It clears

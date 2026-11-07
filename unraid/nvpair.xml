@@ -8,7 +8,7 @@
   <Shell>sh</Shell>
   <Project>https://github.com/ggee/nvpair-container</Project>
   <TemplateURL>https://raw.githubusercontent.com/ggee/nvpair-container/main/unraid/nvpair.xml</TemplateURL>
-  <Overview>Unofficial headless NVIDIA PAIR wrapper for Linux/amd64. Uses the greggee/nvpair-container image from Docker Hub and requires a separate Ollama backend on host loopback port 11434. Restrict host-network listeners to the trusted LAN before starting. Optional NVIDIA utility telemetry requires the host NVIDIA runtime.</Overview>
+  <Overview>Unofficial headless NVIDIA PAIR wrapper for Linux/amd64. Uses the greggee/nvpair-container image from Docker Hub and requires a separate Ollama backend on host loopback port 11434. The name shown in PAIR defaults to PAIR-UNRAID. To change it, enable Advanced View and edit --hostname=PAIR-UNRAID in Extra Parameters, then Apply. Use a unique hostname with letters, numbers, and hyphens. The Unraid container Name field does not set the PAIR display name. Keep the same state path to preserve pairing. Restrict host-network listeners to the trusted LAN before starting. Optional NVIDIA utility telemetry requires the host NVIDIA runtime.</Overview>
   <Category>Tools:</Category>
   <WebUI/>
   <ExtraParams>--hostname=PAIR-UNRAID --read-only --cap-drop=ALL --cap-add=CHOWN --cap-add=FOWNER --cap-add=DAC_OVERRIDE --cap-add=SETUID --cap-add=SETGID --security-opt=no-new-privileges:true --tmpfs=/tmp --stop-timeout=60 --restart=unless-stopped</ExtraParams>
