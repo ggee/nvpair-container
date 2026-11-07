@@ -1,0 +1,6 @@
+services:
+  nvpair:
+    runtime: nvidia
+    environment:
+      NVIDIA_VISIBLE_DEVICES: ${NVIDIA_VISIBLE_DEVICES:?Set the GPU UUID in .env}
+      NVIDIA_DRIVER_CAPABILITIES: utility

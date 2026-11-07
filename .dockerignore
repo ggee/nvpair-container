@@ -1,0 +1,7 @@
+.git
+.env
+state
+tests
+**/__pycache__
+*.tar
+*.zip

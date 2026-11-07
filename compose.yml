@@ -1,0 +1,27 @@
+services:
+  nvpair:
+    image: nvpair-container:1.0.0
+    build:
+      context: .
+    platform: linux/amd64
+    container_name: nvpair
+    hostname: ${PAIR_NODE_NAME:-PAIR-SERVER}
+    network_mode: host
+    restart: unless-stopped
+    user: "10002:10002"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: [/tmp]
+    environment:
+      PAIR_REQUIRE_OLLAMA: ${PAIR_REQUIRE_OLLAMA:-true}
+      PAIR_OLLAMA_PORT: ${PAIR_OLLAMA_PORT:-11434}
+      PAIR_EXPECT_PROXY_PORT: ${PAIR_EXPECT_PROXY_PORT:-11435}
+    volumes:
+      - ${PAIR_STATE_DIR:-./state}:/state
+    stop_grace_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"

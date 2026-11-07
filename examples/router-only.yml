@@ -1,0 +1,7 @@
+# Experimental: disables the local-Ollama health requirement.
+# Validate discovery, pairing, and inference on the destination host.
+services:
+  nvpair:
+    environment:
+      PAIR_REQUIRE_OLLAMA: "false"
+      PAIR_EXPECT_PROXY_PORT: "0"
