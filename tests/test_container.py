@@ -147,9 +147,7 @@ class AdministrationTests(unittest.TestCase):
         configs = {c.attrib["Target"]: c.text for c in root.findall("Config")}
         self.assertEqual(configs["NVIDIA_DRIVER_CAPABILITIES"], "utility")
         self.assertEqual(configs["NVIDIA_VISIBLE_DEVICES"], "void")
-        self.assertEqual(configs["/state/.llamacpp"], "/mnt/user/nvpair/models/llamacpp")
-        self.assertEqual(configs["/state/config/Nvidia Corporation/Personal AI Router/engine-bin"],
-                         "/mnt/user/nvpair/engines")
+        self.assertEqual(configs["/storage"], "/mnt/user/nvpair")
 
 
 if __name__ == "__main__":

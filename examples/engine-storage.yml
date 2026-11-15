@@ -2,5 +2,4 @@
 services:
   nvpair:
     volumes:
-      - ${PAIR_ENGINES_DIR:?Set PAIR_ENGINES_DIR outside appdata}:/state/config/Nvidia Corporation/Personal AI Router/engine-bin
-      - ${PAIR_LLAMACPP_MODELS_DIR:?Set PAIR_LLAMACPP_MODELS_DIR outside appdata}:/state/.llamacpp
+      - ${PAIR_STORAGE_DIR:?Set PAIR_STORAGE_DIR outside appdata}:/storage

@@ -106,16 +106,22 @@ This is a custom image, not a Community Applications listing or NVIDIA release.
 
 ### Engine and model storage
 
-The Unraid template maps engine installations (including their runtime libraries)
-to `/mnt/user/nvpair/engines` and the llama.cpp model cache to
-`/mnt/user/nvpair/models/llamacpp`. Settings and pairing remain in appdata. These are
-dedicated directories for one node, initialized as UID/GID `10002:10002` with
-mode `0700`; existing contents are not recursively re-owned. The container paths
-are nested under `/state` to preserve upstream's default paths, but the files
-live in the separate host mappings, not the appdata share.
+The Unraid template maps `/mnt/user/nvpair` to `/storage`. Startup creates
+`engines/` and `models/llamacpp/` inside that share, assigning only those
+subdirectories (including `models/`) to UID/GID `10002:10002` with mode `0700`.
+The share root's ownership and permissions are preserved. Existing contents are
+not recursively re-owned. Use dedicated storage for one node.
 
-For Compose, set `PAIR_ENGINES_DIR` and `PAIR_LLAMACPP_MODELS_DIR` in `.env`
-to dedicated absolute paths outside appdata, then use:
+Settings and pairing remain in appdata through `/state`. Startup creates these
+internal symlinks so upstream can keep its expected paths:
+
+| PAIR path in the container | Target | Unraid host location |
+| --- | --- | --- |
+| `/state/config/Nvidia Corporation/Personal AI Router/engine-bin` | `/storage/engines` | `/mnt/user/nvpair/engines` |
+| `/state/.llamacpp` | `/storage/models/llamacpp` | `/mnt/user/nvpair/models/llamacpp` |
+
+For Compose, set `PAIR_STORAGE_DIR` in `.env` to a dedicated absolute path outside
+appdata, then use:
 
 ```bash
 docker compose -f compose.yml -f examples/engine-storage.yml up -d --build
@@ -124,15 +130,22 @@ docker compose -f compose.yml -f examples/engine-storage.yml up -d --build
 Use the same override for subsequent Compose operations. This configures storage
 only: the wrapper still enables only the Ollama proxy and requires a separately
 installed Ollama by default. Its model storage is configured separately. Local
-llama.cpp inference is not enabled or validated by these mappings.
+llama.cpp inference is not enabled or validated by this mapping.
 
-Existing installations must add the new mappings explicitly; importing a template
-does not update a running container. New mounts hide files previously stored at
-those container paths. Stop the container and copy any existing engine/model
-contents to their new host directories, preserving ownership, before applying
-the mappings. Keep the original files until the new layout is verified. Use the
-same mappings on every recreation. This layout has automated checks but has not
-been validated on Unraid.
+For existing installations, stop the container and back up state before changing
+mappings. If upgrading from the two-mount layout, remove the old `engine-bin` and
+`.llamacpp` mount entries and add `/mnt/user/nvpair:/storage`; existing external
+files already in `engines/` and `models/llamacpp/` can remain there. Startup
+replaces empty directories at the old container paths with symlinks. If those
+paths contain data in appdata or point elsewhere, startup refuses to continue:
+copy the contents to the appropriate external subdirectories preserving ownership,
+then move the old directories out of the way. Keep backups until verified. No
+automatic data migration is performed. Restore the `/storage` mapping if startup
+reports that a link requires it. Legacy nested mounts remain supported when
+`/storage` is absent, but must not be combined with the new layout.
+
+Importing a template does not update an existing container's settings. This layout
+has automated and Docker checks but has not been validated on Unraid.
 
 ## Experimental routing-only mode
 
@@ -161,9 +174,10 @@ docker compose -f compose.yml -f examples/router-only.yml config --quiet
 Builds use a digest-pinned Python base and verify the official archive SHA-256
 before extraction. Image tags use `<PAIR version>-<wrapper revision>`, currently
 `greggee/nvpair-container:1.0.0-2`: upstream PAIR 1.0.0, wrapper revision 2.
-For wrapper-only updates, increment the revision suffix and update the Compose
-image, Unraid template, Dockerfile image-version label, and documentation; keep
-`PAIR_VERSION` and `PAIR_SHA256` unchanged. For an upstream upgrade, review
+Increment the revision suffix only when releasing a new container version, not
+for development changes or test rebuilds. At release time, update the Compose
+image, Unraid template, Dockerfile image-version label, and documentation. For
+wrapper-only releases, keep `PAIR_VERSION` and `PAIR_SHA256` unchanged. For an upstream upgrade, review
 upstream, update both pins and the notices, and reset the wrapper revision to 1
 for the new PAIR version. Build and validate using isolated state. Do not replace
 individual workers. Building or updating these references does not publish an

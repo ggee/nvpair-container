@@ -75,5 +75,32 @@ local only; no image was published and no host service was deployed.
 - Built the local image `greggee/nvpair-container:1.0.0-2`, with matching OCI
   image-version label. PAIR version 1.0.0 and its archive SHA-256 are unchanged.
 - Compose and the Unraid template now reference this revision. Future
-  wrapper-only rebuilds increment the suffix independently of the PAIR version.
+  container releases increment the suffix independently of the PAIR version;
+  development changes and test rebuilds retain the current tag.
 - No image was pushed to a registry.
+
+## Single external share — 2026-11-14
+
+- Initially tested this layout under a temporary `1.0.0-3` tag, then rebuilt it
+  as `greggee/nvpair-container:1.0.0-2` to retain the current release revision.
+  PAIR version and checksum remain unchanged. Development rebuilds keep the
+  current tag until a new container version is released.
+- All 21 Python tests passed. Base, NVIDIA, routing-only, external-storage,
+  and combined NVIDIA/external-storage Compose configurations validated, along
+  with the Unraid XML. The template now contains only `/state` and `/storage`
+  path mappings.
+- Real network-isolated Docker containers used disposable state and storage
+  volumes. Startup created private `engines`, `models`, and `models/llamacpp`
+  subdirectories and replaced empty legacy directories with the expected
+  symlinks. The storage volume root's original ownership and mode were preserved.
+- Verified writable linked paths as UID/GID 10002 with no unrelated groups and
+  zero effective capabilities, persistence across container recreation, and
+  direct non-root startup on initialized storage. Independent volume inspection
+  confirmed settings/links in state and engine/model marker files in storage.
+- Confirmed startup refuses a nonempty existing model directory and leaves its
+  file contents intact. Unit coverage also checks conflicting mounts, unexpected
+  symlinks, symlinked storage directories, and a missing storage mount.
+- All disposable test volumes were removed. The image was not published and no
+  host services were deployed. Tests used Python probes and marker files;
+  Unraid bind mounts, llama.cpp installation/inference, GPU access, and full PAIR
+  startup/pairing remain unvalidated.

@@ -82,3 +82,76 @@ class StateInitializationTests(unittest.TestCase):
             mounts.write_text("")
             entrypoint.prepare_engine_storage(root, os.getuid(), os.getgid(), mounts)
             self.assertEqual(list(root.iterdir()), [])
+
+    def storage_layout(self, directory):
+        base = Path(directory)
+        state, storage = base / "state", base / "storage"
+        state.mkdir()
+        storage.mkdir(mode=0o755)
+        mounts = base / "mountinfo"
+        mounts.write_text(f"1 0 0:1 / {storage} rw - ext4 /dev/test rw\n")
+        return state, storage, mounts
+
+    def test_share_creates_private_subdirectories_and_persistent_links(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state, storage, mounts = self.storage_layout(directory)
+            root_mode = storage.stat().st_mode
+            for attempt in range(2):
+                entrypoint.prepare_engine_storage(state, os.getuid(), os.getgid(), mounts, storage)
+                for relative in ("engines", "models", "models/llamacpp"):
+                    self.assertEqual(stat.S_IMODE((storage / relative).stat().st_mode), 0o700)
+                link = state / ".llamacpp"
+                self.assertTrue(link.is_symlink())
+                self.assertEqual(link.resolve(), storage / "models/llamacpp")
+                engine_link = state / "config/Nvidia Corporation/Personal AI Router/engine-bin"
+                self.assertEqual(engine_link.resolve(), storage / "engines")
+                if attempt == 0:
+                    (link / "test.gguf").write_bytes(b"model")
+                    (engine_link / "test-engine").write_bytes(b"engine")
+                self.assertEqual((link / "test.gguf").read_bytes(), b"model")
+                self.assertEqual((engine_link / "test-engine").read_bytes(), b"engine")
+            self.assertEqual(storage.stat().st_mode, root_mode)
+
+    def test_share_refuses_existing_data_or_unexpected_link(self):
+        for kind in ("data", "link"):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as directory:
+                state, storage, mounts = self.storage_layout(directory)
+                original = state / ".llamacpp"
+                if kind == "data":
+                    original.mkdir()
+                    (original / "existing.gguf").write_bytes(b"keep")
+                else:
+                    original.symlink_to(Path(directory) / "elsewhere")
+                with self.assertRaisesRegex(RuntimeError, "migrate"):
+                    entrypoint.prepare_engine_storage(state, os.getuid(), os.getgid(), mounts, storage)
+                if kind == "data":
+                    self.assertEqual((original / "existing.gguf").read_bytes(), b"keep")
+                else:
+                    self.assertEqual(os.readlink(original), str(Path(directory) / "elsewhere"))
+
+    def test_share_rejects_symlinked_storage_subdirectory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state, storage, mounts = self.storage_layout(directory)
+            elsewhere = Path(directory) / "elsewhere"
+            elsewhere.mkdir(mode=0o755)
+            (storage / "engines").symlink_to(elsewhere)
+            before = elsewhere.stat().st_mode
+            with self.assertRaises(OSError):
+                entrypoint.prepare_engine_storage(state, os.getuid(), os.getgid(), mounts, storage)
+            self.assertEqual(elsewhere.stat().st_mode, before)
+
+    def test_share_mount_cannot_be_removed_while_links_remain(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state, storage, mounts = self.storage_layout(directory)
+            entrypoint.prepare_engine_storage(state, os.getuid(), os.getgid(), mounts, storage)
+            mounts.write_text("")
+            with self.assertRaisesRegex(RuntimeError, "restore the /storage mount"):
+                entrypoint.prepare_engine_storage(state, os.getuid(), os.getgid(), mounts, storage)
+
+    def test_share_and_legacy_mounts_cannot_be_combined(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state, storage, mounts = self.storage_layout(directory)
+            with mounts.open("a") as stream:
+                stream.write(f"2 0 0:2 / {state}/.llamacpp rw - ext4 /dev/test rw\n")
+            with self.assertRaisesRegex(RuntimeError, "remove the old"):
+                entrypoint.prepare_engine_storage(state, os.getuid(), os.getgid(), mounts, storage)
