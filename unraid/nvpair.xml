@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <Container version="2">
   <Name>nvpair</Name>
-  <Repository>greggee/nvpair-container:1.0.0</Repository>
+  <Repository>greggee/nvpair-container:1.0.0-2</Repository>
   <Registry>https://hub.docker.com/r/greggee/nvpair-container</Registry>
   <Icon>https://raw.githubusercontent.com/NVIDIA/Personal-AI-Router/v1.0.0/desktop/resources/app-icon/pair-256.png</Icon>
   <Network>host</Network>
@@ -27,6 +27,7 @@ These settings enable monitoring; configure Ollama GPU inference separately. AMD
 
 STATE AND PAIRING:
 The appdata directory is automatically secured at startup, then PAIR runs as UID/GID 10002:10002. Keep the same state path when renaming or updating; it contains private identity keys and preserves pairing. Never share state between nodes or publish it.
+Engine binaries and llama.cpp models have separate storage mappings outside appdata, defaulting to /mnt/user/nvpair/engines and /mnt/user/nvpair/models/llamacpp. Use dedicated directories for this node. These mappings prepare storage only; this wrapper currently enables only the Ollama proxy. Existing files are not migrated automatically.
 Send an invitation from your PAIR desktop client, then accept in the Unraid terminal:
 docker exec --user=10002:10002 -it nvpair python3 /app/admin.py accept
 Enter the PIN shown by the inviting client. Check status with:
@@ -41,6 +42,8 @@ Upstream: https://github.com/NVIDIA/Personal-AI-Router</Overview>
   <WebUI/>
   <ExtraParams>--hostname=PAIR-UNRAID --read-only --cap-drop=ALL --cap-add=CHOWN --cap-add=FOWNER --cap-add=DAC_OVERRIDE --cap-add=SETUID --cap-add=SETGID --security-opt=no-new-privileges:true --tmpfs=/tmp --stop-timeout=60 --restart=unless-stopped</ExtraParams>
   <Config Name="PAIR state" Target="/state" Default="/mnt/user/appdata/nvpair" Mode="rw" Description="Private state, automatically secured as UID/GID 10002 with mode 0700 at startup; contains identity keys. Never share across nodes." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/nvpair</Config>
+  <Config Name="Engine binaries" Target="/state/config/Nvidia Corporation/Personal AI Router/engine-bin" Default="/mnt/user/nvpair/engines" Mode="rw" Description="Dedicated engine installation directory outside appdata; includes downloaded runtime libraries. Secured as UID/GID 10002 at startup. Does not enable llama.cpp. Existing files are not migrated." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/nvpair/engines</Config>
+  <Config Name="llama.cpp models" Target="/state/.llamacpp" Default="/mnt/user/nvpair/models/llamacpp" Mode="rw" Description="Dedicated llama.cpp model cache outside appdata. Secured as UID/GID 10002 at startup. Does not enable llama.cpp or change separate Ollama storage. Existing files are not migrated." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/nvpair/models/llamacpp</Config>
   <Config Name="Require local Ollama" Target="PAIR_REQUIRE_OLLAMA" Default="true" Description="Health check requires an adopted local Ollama." Type="Variable" Display="advanced" Required="true" Mask="false">true</Config>
   <Config Name="Ollama backend port" Target="PAIR_OLLAMA_PORT" Default="11434" Description="Expected adopted backend port; does not relocate Ollama." Type="Variable" Display="advanced" Required="true" Mask="false">11434</Config>
   <Config Name="PAIR proxy port" Target="PAIR_EXPECT_PROXY_PORT" Default="11435" Description="Expected proxy port; does not configure its listener." Type="Variable" Display="advanced" Required="true" Mask="false">11435</Config>

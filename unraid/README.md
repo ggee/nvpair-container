@@ -1,6 +1,8 @@
 # Unraid deployment
 
-The template uses `greggee/nvpair-container:1.0.0` from Docker Hub. Start with
+The template references `greggee/nvpair-container:1.0.0-2` (PAIR 1.0.0,
+wrapper revision 2). It must be built locally or published to Docker Hub before
+use; changing the template does not publish an image. Start with
 a fresh node identity and a unique hostname such as `PAIR-UNRAID`.
 
 The template uses NVIDIA's official 256 x 256 PAIR application icon from the
@@ -31,7 +33,15 @@ renaming does not require deleting state or creating a new pairing identity.
    `mkdir`, `chown`, or `chmod` is needed on a local filesystem supporting these
    operations. Existing identity files are preserved; ownership is not changed
    recursively. Never use a shared appdata directory or another node's state.
-4. For an existing installation, pull the rebuilt `1.0.0` image and replace the old
+   Keep **Engine binaries** (default `/mnt/user/nvpair/engines`) and **llama.cpp
+   models** (default `/mnt/user/nvpair/models/llamacpp`) on dedicated storage outside
+   appdata. These mounts store engine binaries/runtime libraries and model
+   weights separately from settings and pairing. They do not enable llama.cpp;
+   the wrapper still enables only the Ollama proxy. Existing files are not
+   migrated automatically; see [storage and migration](../README.md#engine-and-model-storage)
+   before adding these mounts to an existing installation.
+4. For an existing installation, use the rebuilt `1.0.0-2` image (pull it once
+   published, or load a local build) and replace the old
    **Extra Parameters** with the value in the updated XML. Remove the old
    `--user=10002:10002` flag; preserve `--cap-drop=ALL` and add `CHOWN`, `FOWNER`,
    `DAC_OVERRIDE`, `SETUID`, and `SETGID` with `--cap-add` as in the template.

@@ -1,6 +1,6 @@
 services:
   nvpair:
-    image: greggee/nvpair-container:1.0.0
+    image: greggee/nvpair-container:1.0.0-2
     build:
       context: .
     platform: linux/amd64

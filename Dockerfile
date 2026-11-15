@@ -6,6 +6,7 @@ COPY container/fetch.py /fetch.py
 RUN test "$TARGETARCH" = amd64 && python3 /fetch.py "$PAIR_VERSION" "$PAIR_SHA256" /bundle
 
 FROM python:3.12-slim@sha256:4840d514c583a4d3d8cad3940e68dee6f0f6f3635c12fcd0a3d74c21a5b93a54
+LABEL org.opencontainers.image.version="1.0.0-2"
 WORKDIR /app
 COPY --from=download /bundle/ /app/
 COPY container/supervisor.py container/admin.py container/entrypoint.py /app/

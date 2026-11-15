@@ -51,3 +51,34 @@ class StateInitializationTests(unittest.TestCase):
                     entrypoint.prepare_state(path, os.getuid(), os.getgid())
             self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o755)
             self.assertEqual(file.read_bytes(), b"untouched")
+
+    def test_engine_mounts_prepare_docker_created_parents_without_changing_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "state"
+            engines = root / "config/Nvidia Corporation/Personal AI Router/engine-bin"
+            models = root / ".llamacpp"
+            engines.mkdir(parents=True)
+            models.mkdir()
+            model = models / "existing.gguf"
+            model.write_bytes(b"existing model")
+            before = model.stat()
+            mounts = Path(directory) / "mountinfo"
+            mounts.write_text("".join(
+                "1 0 0:1 / " + str(path).replace(" ", r"\040") + " rw - ext4 /dev/test rw\n"
+                for path in (engines, models)
+            ))
+            entrypoint.prepare_engine_storage(root, os.getuid(), os.getgid(), mounts)
+            for path in (engines, models, engines.parent, root / "config"):
+                self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o700)
+            self.assertEqual(model.read_bytes(), b"existing model")
+            self.assertEqual(model.stat().st_mode, before.st_mode)
+            self.assertEqual(model.stat().st_mtime_ns, before.st_mtime_ns)
+
+    def test_no_external_mounts_leave_existing_profile_alone(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "state"
+            root.mkdir()
+            mounts = Path(directory) / "mountinfo"
+            mounts.write_text("")
+            entrypoint.prepare_engine_storage(root, os.getuid(), os.getgid(), mounts)
+            self.assertEqual(list(root.iterdir()), [])

@@ -104,6 +104,36 @@ limits and are not guaranteed to describe the entire host.
 See [the Unraid guide](unraid/README.md) and [local template](unraid/nvpair.xml).
 This is a custom image, not a Community Applications listing or NVIDIA release.
 
+### Engine and model storage
+
+The Unraid template maps engine installations (including their runtime libraries)
+to `/mnt/user/nvpair/engines` and the llama.cpp model cache to
+`/mnt/user/nvpair/models/llamacpp`. Settings and pairing remain in appdata. These are
+dedicated directories for one node, initialized as UID/GID `10002:10002` with
+mode `0700`; existing contents are not recursively re-owned. The container paths
+are nested under `/state` to preserve upstream's default paths, but the files
+live in the separate host mappings, not the appdata share.
+
+For Compose, set `PAIR_ENGINES_DIR` and `PAIR_LLAMACPP_MODELS_DIR` in `.env`
+to dedicated absolute paths outside appdata, then use:
+
+```bash
+docker compose -f compose.yml -f examples/engine-storage.yml up -d --build
+```
+
+Use the same override for subsequent Compose operations. This configures storage
+only: the wrapper still enables only the Ollama proxy and requires a separately
+installed Ollama by default. Its model storage is configured separately. Local
+llama.cpp inference is not enabled or validated by these mappings.
+
+Existing installations must add the new mappings explicitly; importing a template
+does not update a running container. New mounts hide files previously stored at
+those container paths. Stop the container and copy any existing engine/model
+contents to their new host directories, preserving ownership, before applying
+the mappings. Keep the original files until the new layout is verified. Use the
+same mappings on every recreation. This layout has automated checks but has not
+been validated on Unraid.
+
 ## Experimental routing-only mode
 
 Without local Ollama, the original wrapper would restart repeatedly. This
@@ -129,11 +159,15 @@ docker compose -f compose.yml -f examples/router-only.yml config --quiet
 ```
 
 Builds use a digest-pinned Python base and verify the official archive SHA-256
-before extraction. The image remains tagged `1.0.0`; the upstream version and
-checksum are unchanged by wrapper-only updates. To upgrade, review upstream,
-update both `PAIR_VERSION` and `PAIR_SHA256` in the Dockerfile, update image
-tags/examples/template and notices,
-then build and validate using isolated state. Do not replace individual workers.
+before extraction. Image tags use `<PAIR version>-<wrapper revision>`, currently
+`greggee/nvpair-container:1.0.0-2`: upstream PAIR 1.0.0, wrapper revision 2.
+For wrapper-only updates, increment the revision suffix and update the Compose
+image, Unraid template, Dockerfile image-version label, and documentation; keep
+`PAIR_VERSION` and `PAIR_SHA256` unchanged. For an upstream upgrade, review
+upstream, update both pins and the notices, and reset the wrapper revision to 1
+for the new PAIR version. Build and validate using isolated state. Do not replace
+individual workers. Building or updating these references does not publish an
+image to Docker Hub.
 
 The original adopted-Ollama wrapper was validated on an Ubuntu AMD host. This
 portable derivative has automated tests; Unraid deployment, NVIDIA telemetry,

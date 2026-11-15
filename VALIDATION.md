@@ -46,3 +46,34 @@ No production services were changed and no model requests were submitted.
 These entrypoint checks executed Python probes, not PAIR workers. Full PAIR
 startup, pairing, inference, GPU telemetry, and Unraid host validation remain
 pending. No image was pushed and no host deployment was performed.
+
+## Separate engine and model storage — 2026-11-14
+
+- Built `nvpair-storage-test:local` with Docker Desktop 4.79.0 / Engine 29.5.3
+  through the Windows CLI. The build downloaded and checksum-verified the pinned
+  upstream v1.0.0 archive.
+- Ran two network-isolated disposable containers with the read-only rootfs,
+  startup capabilities, and no-new-privileges configuration used by the template.
+  Separate disposable volumes were mounted at `/state`, the profile's
+  `engine-bin` directory, and `/state/.llamacpp`.
+- The real entrypoint initialized Docker-created parent directories and the
+  storage mounts. Probes confirmed UID/GID 10002, no supplementary groups, zero
+  effective capabilities, mode 0700 directories, and writable settings, engine,
+  and model locations. Marker contents survived container recreation.
+- Inspected each volume independently to verify engine/model markers were in
+  their dedicated volumes and absent from the underlying state volume. All
+  disposable volumes were removed after testing.
+
+These checks used Python probes and marker files, not installed inference engines
+or downloaded models. They establish Docker storage separation and persistence
+with nested volumes; Unraid host bind mounts, llama.cpp installation/inference,
+GPU access, and full PAIR startup/pairing remain unvalidated. The test image is
+local only; no image was published and no host service was deployed.
+
+## Wrapper revision tag — 2026-11-14
+
+- Built the local image `greggee/nvpair-container:1.0.0-2`, with matching OCI
+  image-version label. PAIR version 1.0.0 and its archive SHA-256 are unchanged.
+- Compose and the Unraid template now reference this revision. Future
+  wrapper-only rebuilds increment the suffix independently of the PAIR version.
+- No image was pushed to a registry.
