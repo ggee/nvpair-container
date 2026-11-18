@@ -28,10 +28,11 @@ These settings enable monitoring; configure Ollama GPU inference separately. AMD
 STATE AND PAIRING:
 The appdata directory is automatically secured at startup, then PAIR runs as UID/GID 10002:10002. Keep the same state path when renaming or updating; it contains private identity keys and preserves pairing. Never share state between nodes or publish it.
 Map the nvpair share (/mnt/user/nvpair) to /storage. Startup creates engines and models/llamacpp inside it, sets their ownership to 10002:10002 and mode to 0700, and links the upstream paths to them. The share root permissions are preserved. Use dedicated storage for this node. This prepares storage only; the wrapper still enables only the Ollama proxy. Existing nonempty directories require manual migration. Remove the old nested engine/model mounts when switching to /storage.
-Send an invitation from your PAIR desktop client, then accept in the Unraid terminal:
-docker exec --user=10002:10002 -it nvpair python3 /app/admin.py accept
+Send an invitation from your PAIR desktop client. In Unraid's Docker tab, click the running nvpair container's icon and select Console. Inside that Console, run:
+python3 /app/admin.py accept
 Enter the PIN shown by the inviting client. Check status with:
-docker exec --user=10002:10002 nvpair python3 /app/admin.py status
+python3 /app/admin.py status
+The Console opens as root for administration; the running PAIR services use UID/GID 10002:10002. These commands talk to the existing service.
 
 NETWORK ACCESS:
 Restrict TCP 11435, 14318-14323 and UDP 5353 to loopback and your trusted LAN, for both IPv4 and IPv6. Do not expose these services to the Internet. No WebUI is included.

@@ -60,11 +60,32 @@ renaming does not require deleting state or creating a new pairing identity.
    extra flags. Leave selection at `void` to disable GPU exposure. Apply recreates
    the container so PAIR can detect the GPU at startup. Configure Ollama's compute
    access separately; AMD GPU utilization telemetry is not supported here.
-7. Start, check health, accept the invitation as described in the main README,
-   and verify a streamed inference request originating from another node.
+7. Start the container and check its health. Send an invitation from your PAIR
+   desktop client. In Unraid's **Docker** tab, click the running **nvpair**
+   container's icon and select **Console**. Inside that Console, run:
 
-Verify telemetry in the running container with the `nvidia-smi` query in the main
-README, then inspect the node in Windows PAIR during a short Ollama generation.
+   ```bash
+   python3 /app/admin.py accept
+   ```
+
+   Enter the PIN displayed by the inviting PAIR client. To check status in the
+   same Console, run:
+
+   ```bash
+   python3 /app/admin.py status
+   ```
+
+   The Console opens as root for administration; the running PAIR services use
+   UID/GID `10002:10002`. These helpers communicate with the existing service.
+   Verify a streamed inference request originating from another node.
+
+For telemetry, run this in the container Console, then inspect the node in
+Windows PAIR during a short Ollama generation:
+
+```bash
+nvidia-smi --query-gpu=name,utilization.gpu,memory.used,memory.total --format=csv
+```
+
 Keep read-only rootfs, non-root PAIR workers, the template capabilities and
 no-new-privileges unless a specific, diagnosed host compatibility issue requires
 a change.
